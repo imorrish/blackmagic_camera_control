@@ -162,6 +162,13 @@ class PrefsKeys {
   PrefsKeys._();
 
   static const String lastCameraIp = 'last_camera_ip';
+
+  // MIDI preferences
+  static const String midiProfileNames = 'midi_profile_names';
+  static const String midiProfilePrefix = 'midi_profile_';
+  static const String midiLastDevice = 'midi_last_device';
+  static const String midiActiveProfile = 'midi_active_profile';
+  static const String midiEnabled = 'midi_enabled';
 }
 
 /// Debounce durations
