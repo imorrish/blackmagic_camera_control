@@ -86,9 +86,8 @@ class _MappingEditorDialogState extends State<MappingEditorDialog> {
 
   void _startLearn() {
     setState(() => _isLearning = true);
-    // Use a sentinel action ID so the provider captures the next message.
-    _midiProvider?.startLearn('__dialog_learn__');
-    // Poll until learning is done (provider sets isLearning = false).
+    // Use the sentinel action ID so the provider captures the next message.
+    _midiProvider?.startLearn(MidiProvider.learnSentinelActionId);
     _pollLearnResult();
   }
 
@@ -100,13 +99,13 @@ class _MappingEditorDialogState extends State<MappingEditorDialog> {
       if (!provider.isLearning) {
         // Find the learned mapping for our sentinel action id.
         final matches = provider.activeProfile.mappings
-            .where((m) => m.target.actionId == '__dialog_learn__')
+            .where((m) => m.target.actionId == MidiProvider.learnSentinelActionId)
             .toList();
         final learned = matches.isEmpty ? null : matches.last;
         if (learned != null) {
           // Remove the sentinel mapping.
-          final idx = provider.activeProfile.mappings
-              .lastIndexWhere((m) => m.target.actionId == '__dialog_learn__');
+          final idx = provider.activeProfile.mappings.lastIndexWhere(
+              (m) => m.target.actionId == MidiProvider.learnSentinelActionId);
           if (idx >= 0) provider.removeMapping(idx);
 
           setState(() {

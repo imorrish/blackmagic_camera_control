@@ -214,12 +214,12 @@ class MidiActionRegistry {
   ];
 
   /// Find an action by its ID, or null if not found.
-  static MidiAction? findById(String id) {
-    for (final action in actions) {
-      if (action.id == id) return action;
-    }
-    return null;
-  }
+  static MidiAction? findById(String id) => _actionsById[id];
+
+  /// Internal O(1) lookup map, built from [actions] at first use.
+  static final Map<String, MidiAction> _actionsById = {
+    for (final a in actions) a.id: a,
+  };
 
   /// All unique category labels in display order.
   static List<String> get categories {

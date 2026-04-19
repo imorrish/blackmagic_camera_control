@@ -292,73 +292,75 @@ class MidiProvider extends ChangeNotifier {
 
   // ── Internal: MIDI dispatch ───────────────────────────────────────────────
 
+  /// Sentinel action ID used by the mapping editor dialog when learning.
+  /// Exposed so the dialog can reference it without a magic string.
+  static const learnSentinelActionId = '__dialog_learn__';
+
   void _onMidiMessage(MidiMessage message) {
-    // Record for activity monitor.
+    // Record for activity monitor (always, regardless of enabled state).
     _recentMessages.add(message);
     if (_recentMessages.length > _maxRecentMessages) {
-      _recentMessages.removeAt(0);
+      _recentMessages.removeRange(0, _recentMessages.length - _maxRecentMessages);
     }
 
-    // Handle MIDI Learn mode.
-    if (_isLearning && _learningForActionId != null) {
-      // Only react to note-on or CC messages for learn.
-      if (message.type == MidiMessageType.controlChange ||
-          message.type == MidiMessageType.noteOn) {
-        final control = MidiControl.fromMessage(message);
-        final existing = _activeProfile.mappings.indexWhere(
-          (m) => m.target.actionId == _learningForActionId,
-        );
-        final newMapping = MidiMapping(
-          source: control,
-          target: MidiTarget(actionId: _learningForActionId!),
-        );
-        if (existing >= 0) {
-          updateMapping(existing, newMapping);
-        } else {
-          addMapping(newMapping);
+    try {
+      // Handle MIDI Learn mode.
+      if (_isLearning && _learningForActionId != null) {
+        // Only react to note-on or CC messages for learn.
+        if (message.type == MidiMessageType.controlChange ||
+            message.type == MidiMessageType.noteOn) {
+          final control = MidiControl.fromMessage(message);
+          final existing = _activeProfile.mappings.indexWhere(
+            (m) => m.target.actionId == _learningForActionId,
+          );
+          final newMapping = MidiMapping(
+            source: control,
+            target: MidiTarget(actionId: _learningForActionId!),
+          );
+          if (existing >= 0) {
+            updateMapping(existing, newMapping);
+          } else {
+            addMapping(newMapping);
+          }
+          _isLearning = false;
+          _learningForActionId = null;
+          if (!_isEnabled) {
+            _messagesSub?.cancel();
+            _messagesSub = null;
+          }
         }
-        _isLearning = false;
-        _learningForActionId = null;
-        if (!_isEnabled) {
-          _messagesSub?.cancel();
-          _messagesSub = null;
-        }
-        notifyListeners();
         return;
       }
-    }
 
-    // Dispatch to camera controls.
-    if (!_isEnabled || _cameraState == null) {
-      notifyListeners();
-      return;
-    }
+      // Dispatch to camera controls.
+      if (!_isEnabled || _cameraState == null) return;
 
-    for (final mapping in _activeProfile.mappings) {
-      if (!mapping.source.matches(message)) continue;
+      for (final mapping in _activeProfile.mappings) {
+        if (!mapping.source.matches(message)) continue;
 
-      final action = MidiActionRegistry.findById(mapping.target.actionId);
-      if (action == null) continue;
+        final action = MidiActionRegistry.findById(mapping.target.actionId);
+        if (action == null) continue;
 
-      // For button actions, only trigger on note-on with velocity > 0, or CC > 0.
-      if (action.type == MidiActionType.button) {
-        if (message.type == MidiMessageType.noteOn && message.value == 0) {
-          continue; // note-on with velocity 0 = note-off
+        // For button actions, only trigger on note-on with velocity > 0, or CC > 0.
+        if (action.type == MidiActionType.button) {
+          if (message.type == MidiMessageType.noteOn && message.value == 0) {
+            continue; // note-on with velocity 0 = note-off
+          }
+          if (message.type == MidiMessageType.controlChange &&
+              message.value == 0) {
+            continue;
+          }
+          action.execute(_cameraState!, 1.0);
+        } else {
+          final isPitchBend = message.type == MidiMessageType.pitchBend;
+          final normalized = mapping.target
+              .normalize(message.value, isPitchBend: isPitchBend);
+          action.execute(_cameraState!, normalized);
         }
-        if (message.type == MidiMessageType.controlChange &&
-            message.value == 0) {
-          continue;
-        }
-        action.execute(_cameraState!, 1.0);
-      } else {
-        final isPitchBend = message.type == MidiMessageType.pitchBend;
-        final normalized =
-            mapping.target.normalize(message.value, isPitchBend: isPitchBend);
-        action.execute(_cameraState!, normalized);
       }
+    } finally {
+      notifyListeners();
     }
-
-    notifyListeners();
   }
 
   // ── SharedPreferences helpers ─────────────────────────────────────────────

@@ -14,6 +14,7 @@ class ActivityMonitorCard extends StatefulWidget {
 
 class _ActivityMonitorCardState extends State<ActivityMonitorCard> {
   final _scrollController = ScrollController();
+  int _lastMessageCount = 0;
 
   @override
   void dispose() {
@@ -24,17 +25,21 @@ class _ActivityMonitorCardState extends State<ActivityMonitorCard> {
   @override
   Widget build(BuildContext context) {
     final midi = context.watch<MidiProvider>();
+    final count = midi.recentMessages.length;
 
-    // Auto-scroll when a new message arrives.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 150),
-          curve: Curves.easeOut,
-        );
-      }
-    });
+    // Auto-scroll only when a new message arrives.
+    if (count > _lastMessageCount) {
+      _lastMessageCount = count;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scrollController.hasClients) {
+          _scrollController.animateTo(
+            _scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 150),
+            curve: Curves.easeOut,
+          );
+        }
+      });
+    }
 
     return Card(
       child: Padding(
@@ -56,8 +61,10 @@ class _ActivityMonitorCardState extends State<ActivityMonitorCard> {
                 TextButton.icon(
                   icon: const Icon(Icons.clear_all, size: 18),
                   label: const Text('Clear'),
-                  onPressed: () =>
-                      context.read<MidiProvider>().clearRecentMessages(),
+                  onPressed: () {
+                    context.read<MidiProvider>().clearRecentMessages();
+                    setState(() => _lastMessageCount = 0);
+                  },
                 ),
               ],
             ),
