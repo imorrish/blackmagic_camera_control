@@ -106,11 +106,11 @@ class MappingTableCard extends StatelessWidget {
           padding:
               const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
           child: Row(
-            children: const [
-              Expanded(flex: 3, child: Text('MIDI Source', style: _headerStyle)),
-              Expanded(flex: 4, child: Text('Camera Control', style: _headerStyle)),
-              Expanded(flex: 2, child: Text('Range', style: _headerStyle)),
-              SizedBox(width: 56, child: Text('', style: _headerStyle)),
+            children: [
+              const Expanded(flex: 3, child: Text('MIDI Source', style: _headerStyle)),
+              const Expanded(flex: 4, child: Text('Camera Control', style: _headerStyle)),
+              const Expanded(flex: 2, child: Text('Range', style: _headerStyle)),
+              const SizedBox(width: 56, child: Text('', style: _headerStyle)),
             ],
           ),
         ),
