@@ -11,6 +11,7 @@ import 'audio_screen.dart';
 import 'media_screen.dart';
 import 'monitoring_screen.dart';
 import 'color_screen.dart';
+import 'midi_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -120,6 +121,7 @@ class _MainScreenState extends State<MainScreen> {
               MediaScreen(),
               MonitoringScreen(),
               ColorScreen(),
+              MidiScreen(),
             ],
           ),
           if (cameraState.error != null)
@@ -169,6 +171,11 @@ class _MainScreenState extends State<MainScreen> {
             selectedIcon: Icon(Icons.color_lens),
             label: 'Color',
           ),
+          NavigationDestination(
+            icon: Icon(Icons.piano_outlined),
+            selectedIcon: Icon(Icons.piano),
+            label: 'MIDI',
+          ),
         ],
       ),
     );
@@ -191,6 +198,9 @@ class _MainScreenState extends State<MainScreen> {
         break;
       case 4:
         await cameraState.refreshColorCorrection();
+        break;
+      case 5:
+        // MIDI screen manages its own state; nothing to refresh here.
         break;
     }
   }

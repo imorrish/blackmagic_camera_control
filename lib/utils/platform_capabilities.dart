@@ -14,4 +14,7 @@ class PlatformCapabilities {
   /// Whether hostname resolution (DNS lookup) is available.
   /// Browsers cannot perform DNS lookups for security reasons.
   static bool get canResolveHostnames => !kIsWeb;
+
+  /// Whether Web MIDI API control is available (web platform only).
+  static bool get hasMidi => kIsWeb;
 }
